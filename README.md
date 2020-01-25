@@ -9,6 +9,6 @@ If you need help on calculating distance, there's this: http://docs.limelightvis
 
 Currently, it's setup to move when you hold the A/B button (using targetArea vs targetDistance).
 
-I basically just use 3 for loops, you can read the comments in the code to see how it works.
+I basically just use 3 for loops, you can read the comments in the code to see how it works. This project was made in a simple TimedRobot project, so I only included the Robot.java file.
 
-Hope this is useful, and if you have any suggestions on how this can be improved, just lmk :)
+Hope this is useful, and if you have any suggestions on how this can be improved, please lmk :)
