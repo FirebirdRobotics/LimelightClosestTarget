@@ -40,19 +40,19 @@ public class Robot extends TimedRobot {
 
   // CONSTANTS TO TUNE/SET
   private final double kSteer = 0.20; // how hard to turn toward the target
-  private final double kDrive = 0.70; // how hard to drive fwd toward the target
-  private final double kMaxDrive = 0.60; // Simple speed limit so we don't drive too fast
+  private final double kDrive = 0.85; // how hard to drive fwd toward the target
+  private final double kMaxDrive = 0.85; // Simple speed limit so we don't drive too fast
   private final double kMaxTurn = 0.80; // ^ turn limit
   private final double kTargetHeight = 92; // height of target above floor (in)
   private final double kCameraHeight = 47.5; // height of camera above floor (in)
   private final double kMountingAngle = 30; // angle that camera is mounted at (deg)
 
   // CLOSEST TARGET STUFF
-  private final double[] kTargetAreas = { 6.0, 2.5, 0.85 }; // INPUT YOUR WANTED TARGETAREA VALUES HERE
-  private final double[] kTargetDistances = { 20, 40, 60 }; // INPUT YOUR WANTED DISTANCES HERE
-  private final double[] distancesToTargets = new double[kTargetAreas.length]; // change this to the length of whichever array you are using
-  private double closestTargetArea = 0;
-  private double closestTargetDistance = 0;
+  private static final double[] kTargetAreas = { 6.0, 2.5, 0.85 }; // INPUT YOUR WANTED TARGETAREA VALUES HERE
+  private static final double[] kTargetDistances = { 20, 40, 60 }; // INPUT YOUR WANTED DISTANCES HERE
+  private static double[] distancesToTargets = new double[kTargetAreas.length]; // change this to the length of whichever array you are using
+  private static double closestTargetArea = 0;
+  private static double closestTargetDistance = 0;
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -86,8 +86,8 @@ public class Robot extends TimedRobot {
 
     updateLimelightTracking();
 
-    final double steer = m_Controller.getX(Hand.kRight) * kMaxTurn;
-    final double drive = m_Controller.getY(Hand.kLeft) * kMaxDrive;
+    double steer = m_Controller.getX(Hand.kRight) * kMaxTurn;
+    double drive = m_Controller.getY(Hand.kLeft) * kMaxDrive;
 
     if (m_Controller.getAButton()) { // if A button pressed
       moveWithLimelight(getClosestTargetArea(kTargetAreas, ta)); // use closest target area function
@@ -116,7 +116,8 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Horizontal Error", tx);
     SmartDashboard.putNumber("Vertical Error", ty);
     SmartDashboard.putNumber("Target Area", ta);
-    SmartDashboard.putNumber("Closest Target", closestTargetArea);
+    SmartDashboard.putNumber("Closest Target (Area)", closestTargetArea);
+    SmartDashboard.putNumber("Closest Target (Distance)", closestTargetDistance);
 
     // using target area
     closestTargetArea = getClosestTargetArea(kTargetAreas, ta);
@@ -154,9 +155,9 @@ public class Robot extends TimedRobot {
     return (kTargetHeight - kCameraHeight) / Math.tan(kMountingAngle + targetAngle);
   }
 
-  public void moveWithLimelight(final double targetArea) {
+  public void moveWithLimelight(double targetArea) {
     // Start with proportional steering
-    final double steerError = tx * kSteer;
+    double steerError = tx * kSteer;
     m_LimelightSteerCommand = steerError;
 
     // try to drive forward until the target area reaches our desired area
