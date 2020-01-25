@@ -4,7 +4,7 @@ This is some code that uses the DEEP SPACE 2019 example found on the limelight d
 
 Essentially, you input a number of wanted distances from the target, and then when you hold a button on your controller, it will automatically move to the closest distance value that you input.
 
-To use it, input your wanted target area / target distance values into the *"kTargetAreas" / "kTargetDistances"* array, then run the code on your bot. Don't forget to tune the constants; there are the proportional loop constants and the max speed values, as well as the stuff for calculating distance. 
+To use it, input your wanted target area / target distance values into the **"kTargetAreas" / "kTargetDistances"** array, then run the code on your bot. Don't forget to tune the constants; there are the proportional loop constants and the max speed values, as well as the stuff for calculating distance. 
 If you need help on calculating distance, there's this: http://docs.limelightvision.io/en/latest/cs_estimating_distance.html
 
 Currently, it's setup to move when you hold the A/B button (using targetArea vs targetDistance).
