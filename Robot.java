@@ -37,15 +37,19 @@ public class Robot extends TimedRobot {
   private double m_LimelightDriveCommand = 0.0;
   private double m_LimelightSteerCommand = 0.0;
   private double tv, tx, ty, ta;
+  private double error, integralError, derivativeError, previousError;
 
   // CONSTANTS TO TUNE/SET
-  private final double kSteer = 0.20; // how hard to turn toward the target
-  private final double kDrive = 0.85; // how hard to drive fwd toward the target
-  private final double kMaxDrive = 0.85; // Simple speed limit so we don't drive too fast
-  private final double kMaxTurn = 0.80; // ^ turn limit
-  private final double kTargetHeight = 92; // height of target above floor (in)
-  private final double kCameraHeight = 47.5; // height of camera above floor (in)
-  private final double kMountingAngle = 30; // angle that camera is mounted at (deg)
+  private static final double kSteer = 0.12; // how hard to turn toward the target
+  private static final double kProportional = 0.80; // proportional constant
+  private static final double kIntegral = 0.00; // integral constant
+  private static final double kDerivative = 0.00; // derivative constant
+  private static final double kFeedForward = 0.05; // feedforward constant
+  private static final double kMaxDrive = 0.60; // Simple speed limit so we don't drive too fast
+  private static final double kMaxTurn = 0.70; // ^ turn limit
+  private static final double kTargetHeight = 92; // height of target above floor (in)
+  private static final double kCameraHeight = 47.5; // height of camera above floor (in)
+  private static final double kMountingAngle = 30; // angle that camera is mounted at (deg)
 
   // CLOSEST TARGET STUFF
   private static final double[] kTargetAreas = { 6.0, 2.5, 0.85 }; // INPUT YOUR WANTED TARGETAREA VALUES HERE
@@ -87,14 +91,20 @@ public class Robot extends TimedRobot {
     updateLimelightTracking();
 
     double steer = m_Controller.getX(Hand.kRight) * kMaxTurn;
-    double drive = m_Controller.getY(Hand.kLeft) * kMaxDrive;
+    double drive = -m_Controller.getY(Hand.kLeft) * kMaxDrive;
 
     if (m_Controller.getAButton()) { // if A button pressed
       moveWithLimelight(getClosestTargetArea(kTargetAreas, ta)); // use closest target area function
+      NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(0); // set to pipeline 0
     } else if (m_Controller.getBButton()) { // if B button pressed
-      moveWithLimelight(getClosestTargetDistance(kTargetDistances, distanceToTarget(ty))); // use closest target distance function
+      // moveWithLimelight(getClosestTargetDistance(kTargetDistances, distanceToTarget(ty))); // use closest target distance function
+      NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(0); // set to pipeline 0
+      m_Drive.arcadeDrive(0, 0);
     } else {
-      m_Drive.arcadeDrive(-drive, steer); // otherwise drive normally
+      NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(1); // set to pipeline 1
+      SmartDashboard.putNumber("Closest Target (Area)", 0); // set this to zero when driver pipeline is active so ppl don't get confused
+      SmartDashboard.putNumber("Closest Target (Distance)", 0); // ^
+      m_Drive.arcadeDrive(drive, steer); // otherwise drive normally
     }
   }
 
@@ -156,12 +166,17 @@ public class Robot extends TimedRobot {
   }
 
   public void moveWithLimelight(double targetArea) {
-    // Start with proportional steering
+    // use a proportional loop for steering
     double steerError = tx * kSteer;
     m_LimelightSteerCommand = steerError;
 
     // try to drive forward until the target area reaches our desired area
-    double driveError = (targetArea - ta) * kDrive;
+    error = targetArea - ta; // error = target - actual
+    integralError += error * 0.02; // integral increased by error * time (0.02 seconds per loop)
+    derivativeError = (error - previousError) / .02; // derivative = change in error / time (0.02 seconds per loop)
+
+    // PID Loop for drive
+    double driveError = (error*kProportional) + (integralError*kIntegral) + (derivativeError*kDerivative) + kFeedForward;
 
     // don't let the robot drive too fast into the goal
     if (driveError > kMaxDrive) {
@@ -170,6 +185,8 @@ public class Robot extends TimedRobot {
       driveError = -kMaxDrive;
     }
     m_LimelightDriveCommand = driveError;
+
+    previousError = error; // update previousError to current error
 
     if (m_LimelightHasValidTarget) { // if limelight sees target
       m_Drive.arcadeDrive(m_LimelightDriveCommand, m_LimelightSteerCommand); // drive using command-tuned values
